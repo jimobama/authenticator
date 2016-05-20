@@ -4,13 +4,15 @@
 
 	/*Create Authentication object*/
 
-	var Authenticator = (function(username, password){
-
-          var __password =(typeof password ==  "string")?password:"";
-          var __username =(typeof username ==  "string")?username:"";        
+	var Authenticator = (function(options){
+          if(!options)options={"username":null,"password":null};  
+          if(!options.username)  options.username="";
+          if(!options.password)  options.password="";
+          if(!options.type)      options.type="json";
+          if(!options.onsuccess) options.onsuccess=(function(){});
+          if(!options.onerror)   options.onerror=(function(){});
+          if(!options.url)  options.password="default.html";
           var __isAutho    =false;
-          var __options= {"type":"json", "method":"post","onsuccess":(function(){console.log("Required a callback function to handle onsuccess");}),
-                 "onerror":(function(error){console.log("require an error callback function ");}), "url":"index.php"};
           //check if a callback vlaue is a function
           var isCallable=(function(callable){
                return (typeof callable ==="function");
@@ -24,7 +26,7 @@
                     //list to load
                     request.addEventListener("load",(function(){
                          if(this.status <= 400)accept(request.responseText)
-                              else reject(new Error("Network error ; could not access the given server file location"));
+                              else reject(new Error("Network error ; could not access the given server file["+ url +"]"));
                     }).bind(request));
                     //list to error
                     request.addEventListener("error",(function(){
@@ -90,7 +92,7 @@
                     return "";
                 }).bind(xmlDoc); 
                 //prcessing xml document format data
-              }else if(__option.type=="json"){
+              }else if(__option.type === "json"){
                 //process json object
                 if(!JSON  || !JSON.parse){
                     JSON ={};
@@ -102,31 +104,35 @@
               return xmlDoc;
          });
 
+    //auto set the options
+      var settings =(function(options){
+          if(options){
+             __options =options;
+             __password =(typeof options.password ==  "string")?options.password:"";
+             __username =(typeof options.options ==  "string")?options.username:"";  
+             __options.onsuccess = (isCallable(options.onsuccess))?options.onsuccess: __options.onsuccess;
+             __options.onerror = (isCallable(options.onerror))?options.onerror: __options.onerror;
+             __options.url= (typeof options.url === "string")?options.url:__options.url;                    
+               if(typeof options.type === "string"){__options.type=options.type.toLowerCase();}
+              if(typeof options.method ==="string" ){
+                           __options.method = options.method.toLowerCase();
+                         }
+             __options.method =(__options.method ==="get")?"get":"post";
+            }
+      })(options);
+
           //return objects
-          return {
+      return  {
                "then":(function(onsuccess, onerror){
-                 try{
+                 try{                  
                  __options.onsuccess = (isCallable(onsuccess))?onsuccess: __options.onsuccess;
-                 __options.onerror = (isCallable(onerror))?onerror: __options.onerror;
+                 __options.onerror = (isCallable(onerror))?onerror: __options.onerror;                 
                   get(__options.url,"username="+__username+",password"+__password)
                     .then(onSuccess, onError);
                   }catch(e){
                     if(onerror)
                           onerror(e);
                   }
-               }),
-               "settings":(function(options){
-                 if(options){
-                    __options.onsuccess = (isCallable(options.onsuccess))?options.onsuccess: __options.onsuccess;
-                    __options.onerror = (isCallable(options.onerror))?options.onerror: __options.onerror;
-                    __options.url= (typeof url === "string")?url:__options.url;
-                      if(typeof options.type === "string"){__options.type=options.type.toLowercase();}
-                    __options.type =(__options.type === "xml")?"xml":"json";
-                    if(typeof options.method ==="string" ){
-                           __options.method = options.method.toLowercase();
-                         }
-                    __options.method =(__options.method ==="get")?"get":"post";
-                 }
                })
           }
 
