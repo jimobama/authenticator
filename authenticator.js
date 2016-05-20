@@ -36,17 +36,38 @@
      		__inProgress=1;
      	}));
 var convertBaseSupporttedType=(function(data){
-
+     var xmlDoc=null;
     if(__options.type==="xml"){
       var     parser =new DOMParser();
-       parser.parserFromString(data, "text/xml");
-       parser.status=(function(){
-         
-       });
+       xmlDoc =  parser.parserFromString(data, "text/xml");
+       //get status
+        xmlDoc.status=(function(){
+          var statusTag=  this.getElementsByTagName("status")[0];
+          if(statusTag){
+              var st=  parseInt(statusTag.innerHTML);
+              return (st ==true)?true:false;
+          }
+          return false;
+       }).bind(this);
+      xmlDoc.error =(function(){
+          var tag=  this.getElementsByTagName("error")[0];
+          if(tag){
+               return tag.innerHTML;
+          }
+          return "";
+      }).bind(xmlDoc); 
       //prcessing xml document format data
     }else if(__option.type=="json"){
       //process json object
+      if(!JSON  || !JSON.parse){
+          JSON ={};
+          JSON.parse=eval;
+          data = "("+ data +")";
+      }
+      xmlDoc = JSON.parse(data);
     }
+
+    return xmlDoc;
 
 });
 
